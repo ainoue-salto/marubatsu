@@ -1,27 +1,12 @@
+#include <marubatsu.h>
 #include <stdio.h> 
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
 
-
-#define NUM 3 // マス数
-#define TARGET NUM // 並べたら勝ちとなる印の数
-
 int MathNum; //各マスの数字
 
-typedef enum {
-	RESULT_WIN, // プレイヤーの勝ち
-	RESULT_LOSE, // プレイヤーの負け
-	RESULT_DRAW, // 引き分け
-	RESULT_NONE // 結果が決まっていない
-} RESULT;
-
-typedef enum {
-	TURN_PLAYER, // プレイヤーのターン
-	TURN_COM, // コンピューターのターン
-} TURN;
-
-// マスに記入された印を管理する
+//// マスに記入された印を管理する
 char board[NUM][NUM] = {
 	{'1', '2', '3'},
 	{'4', '5', '6'},
@@ -122,75 +107,79 @@ bool judgeFull(void) {
 }
 
 //勝敗判定
-RESULT judgeResult(TURN turn) {
-	int count = 0;
-	char mark;
-
-	//記入されたマークを取得
-	if (turn == TURN_PLAYER) {
-		mark = 'o';
-	}
-	else {
-		mark = 'x';
-	}
-
-	//横方向確認
+// 横方向の勝敗を判定する
+bool checkHorizontal(char mark) {
 	for (int y = 0; y < NUM; y++) {
-		count = 0;
+		int count = 0;
 		for (int x = 0; x < NUM; x++) {
 			if (board[y][x] == mark) {
 				count++;
 			}
 		}
 		if (count == TARGET) {
-			return turn == TURN_PLAYER ? RESULT_WIN : RESULT_LOSE;
+			return true;
 		}
 	}
+	return false;
+}
 
-	//縦方向確認
+// 縦方向の勝敗を判定する
+bool checkVertical(char mark) {
 	for (int x = 0; x < NUM; x++) {
-		count = 0;
+		int count = 0;
 		for (int y = 0; y < NUM; y++) {
 			if (board[y][x] == mark) {
 				count++;
 			}
 		}
 		if (count == TARGET) {
-			return turn == TURN_PLAYER ? RESULT_WIN : RESULT_LOSE;
+			return true;
 		}
 	}
+	return false;
+}
 
-	//右斜め確認
-	count = 0;
+// 右斜め方向の勝敗を判定する
+bool checkDiagonalRight(char mark) {
+	int count = 0;
 	for (int k = 0; k < NUM; k++) {
 		if (board[k][k] == mark) {
 			count++;
 		}
 	}
-	if (count == TARGET) {
-		return turn == TURN_PLAYER ? RESULT_WIN : RESULT_LOSE;
-	}
+	return count == TARGET;
+}
 
-	//左斜め確認
-	count = 0;
+// 左斜め方向の勝敗を判定する
+bool checkDiagonalLeft(char mark) {
+	int count = 0;
 	for (int k = 0; k < NUM; k++) {
 		if (board[NUM - 1 - k][k] == mark) {
 			count++;
 		}
 	}
-	if (count == TARGET) {
-		return turn == TURN_PLAYER ? RESULT_WIN : RESULT_LOSE;
+	return count == TARGET;
+}
+
+// 全体の勝敗を判定する
+RESULT judgeResult(TURN turn) {
+	char mark = (turn == TURN_PLAYER) ? 'o' : 'x';
+
+	// 各方向の判定
+	if (checkHorizontal(mark) || checkVertical(mark) ||
+		checkDiagonalRight(mark) || checkDiagonalLeft(mark)) {
+		return (turn == TURN_PLAYER) ? RESULT_WIN : RESULT_LOSE;
 	}
 
-	// マスが全て埋まったかどうかを確認
+	// マスが埋まっているかの確認
 	if (judgeFull()) {
 		return RESULT_DRAW;
 	}
 
-	// まだ勝敗が決定していない
+	// まだ勝敗が決まっていない
 	return RESULT_NONE;
-
 }
+
 
 //ターンを進める
 TURN nextTurn(TURN now) {
